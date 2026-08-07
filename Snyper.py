@@ -1,10 +1,9 @@
 import telebot
 from google import genai
-import os
 import sys
 
-TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+TELEGRAM_TOKEN = '8831119193:AAFlwHtGnNv_IvLsKuIeF_dAf579Ur5SXNE'
+GEMINI_API_KEY = 'AQ.Ab8RN6I0oCC73QV40vbbejz42zWpg4ti1MCcGqY4gyIB5xKBCA'
 CHANNEL_ID = '@Omid_Sniper_Signals'
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
