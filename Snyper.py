@@ -1,14 +1,14 @@
 import telebot
-import google.generativeai as genai
+from google import genai
 import sys
 
 TELEGRAM_TOKEN = '8831119193:AAFlwHtGnNv_IvLsKuIeF_dAf579Ur5SXNE'
-GEMINI_API_KEY = 'AQ.Ab8RN6L_lvnaOD7jf6O3e9vgew7z6Bigg4oYE7LZGLgEszWttA'
+# همان کلیدِ معتبرِ خودت که ساختی:
+GEMINI_API_KEY = 'AQ.Ab8RN6I0oCC73QV40vbbejz42zWpg4ti1MCcGqY4gyIB5xKBCA'
 CHANNEL_ID = '@Omid_Sniper_Signals'
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-3.1-pro')
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_and_send_signal():
     market_data_summary = """
@@ -18,7 +18,10 @@ def generate_and_send_signal():
     در انتهای تحلیل، فقط نقطه ورود، تی‌پی ۱ و استاپ رو به صورت اعدادِ خالص تو سه خط جداگانه بنویس.
     """
     try:
-        response = model.generate_content(market_data_summary)
+        response = client.models.generate_content(
+            model='gemini-1.5-pro',
+            contents=market_data_summary
+        )
         bot.send_message(CHANNEL_ID, f"🎯 **سیگنال جدید تک‌تیرانداز**\n\n{response.text}")
     except Exception as e:
         bot.send_message(CHANNEL_ID, f"❌ خطا در تولید سیگنال:\n{e}")
