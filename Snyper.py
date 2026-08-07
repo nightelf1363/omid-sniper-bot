@@ -19,7 +19,7 @@ def generate_and_send_signal():
     """
     try:
         response = client.models.generate_content(
-            model='gemini-1.5-pro',
+            model='gemini-1.5-flash',
             contents=market_data_summary
         )
         bot.send_message(CHANNEL_ID, f"🎯 **سیگنال جدید تک‌تیرانداز**\n\n{response.text}")
