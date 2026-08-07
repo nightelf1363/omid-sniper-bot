@@ -8,7 +8,7 @@ CHANNEL_ID = '@Omid_Sniper_Signals'
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-pro')
+model = genai.GenerativeModel('gemini-3.1-pro')
 
 def generate_and_send_signal():
     market_data_summary = """
