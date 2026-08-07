@@ -1,0 +1,31 @@
+name: Sniper Signals
+
+on:
+  workflow_dispatch:
+  schedule:
+    # اجرای گزارش ساعت 07:30 صبح (04:00 UTC)
+    - cron: '0 4 * * *'
+    # اجرای سیگنال‌ها هر دو ساعت از 08:00 تا 00:00 (04:30 تا 20:30 UTC)
+    - cron: '30 4,6,8,10,12,14,16,18,20 * * *'
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyTelegramBotAPI google-generativeai
+    - name: Execute Task
+      run: |
+        current_time=$(date +%H:%M)
+        if [ "$current_time" == "04:00" ]; then
+          python Snyper.py report
+        else
+          python Snyper.py signal
+        fi
