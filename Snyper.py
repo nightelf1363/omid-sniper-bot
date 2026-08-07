@@ -18,8 +18,8 @@ def generate_and_send_signal():
     در انتهای تحلیل، فقط نقطه ورود، تی‌پی ۱ و استاپ رو به صورت اعدادِ خالص تو سه خط جداگانه بنویس.
     """
     try:
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
+      response = client.models.generate_content(
+            model='gemini-2.0-flash',
             contents=market_data_summary
         )
         bot.send_message(CHANNEL_ID, f"🎯 **سیگنال جدید تک‌تیرانداز**\n\n{response.text}")
