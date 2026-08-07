@@ -3,9 +3,7 @@ name: Sniper Signals
 on:
   workflow_dispatch:
   schedule:
-    # اجرای گزارش ساعت 07:30 صبح (04:00 UTC)
     - cron: '0 4 * * *'
-    # اجرای سیگنال‌ها هر دو ساعت از 08:00 تا 00:00 (04:30 تا 20:30 UTC)
     - cron: '30 4,6,8,10,12,14,16,18,20 * * *'
 
 jobs:
@@ -20,7 +18,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyTelegramBotAPI google-generativeai
+        pip install pyTelegramBotAPI google-genai
     - name: Execute Task
       run: |
         current_time=$(date +%H:%M)
