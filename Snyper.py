@@ -1,10 +1,10 @@
 import telebot
 from google import genai
+import os
 import sys
 
-TELEGRAM_TOKEN = '8831119193:AAFlwHtGnNv_IvLsKuIeF_dAf579Ur5SXNE'
-# همان کلیدِ خودت که با AQ شروع می‌شود
-GEMINI_API_KEY = 'AQ.Ab8RN6I0oCC73QV40vbbejz42zWpg4ti1MCcGqY4gyIB5xKBCA'
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 CHANNEL_ID = '@Omid_Sniper_Signals'
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
@@ -17,7 +17,6 @@ def generate_and_send_signal():
     لطفاً یک سیگنال دقیق شامل نقطه ورود، حد ضرر و دو هدف قیمتی برای کانال تلگرام بنویس.
     """
     try:
-        # استفاده از ساختار استاندارد کتابخانه جدید با مدل کاملاً هماهنگ
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=market_data_summary
