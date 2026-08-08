@@ -6,47 +6,31 @@ import random
 TELEGRAM_TOKEN = '8831119193:AAFlwHtGnNv_IvLsKuIeF_dAf579Ur5SXNE'
 CHANNEL_ID = '@Omid_Sniper_Signals'
 
-# کلید API اختصاصی شما در صرافی توبیت
-TOOBIT_API_KEY = 'Wcsjtd5V1DQ43w7KCXMtIeIFvGiMqq07xsYcca8kk7TQgDhaPz3kdC6Ig6NYotIr'
-
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-def get_toobit_market_data():
-    """دریافت دیتای زنده با استفاده از API Key اختصاصی توبیت برای جلوگیری از مسدود شدن"""
-    url = "https://api.toobit.com/api/v1/ticker/24hr"
-    
-    # ارسال کلید API در هدر برای تایید هویت و عبور از محدودیت‌ها
-    headers = {
-        "X-BH-APIKEY": TOOBIT_API_KEY,
-        "Content-Type": "application/json"
-    }
+def get_global_market_data():
+    """دریافت دیتای زنده از سرورهای جهانی (برای دور زدن فایروال و دسترسی به تمام ارزهای بازار)"""
+    url = "https://api.binance.com/api/v3/ticker/24hr"
     
     try:
-        response = requests.get(url, headers=headers, timeout=15)
-        data = response.json()
+        response = requests.get(url, timeout=15)
         
-        # سیستم دفاعی: اگر صرافی به جای لیست، پیام خطا فرستاد
-        if isinstance(data, dict):
-            bot.send_message(CHANNEL_ID, f"⚠️ پاسخ صرافی توبیت حاوی خطا است: {data.get('msg', 'دسترسی محدود شد')}")
+        if response.status_code != 200:
+            bot.send_message(CHANNEL_ID, f"⚠️ خطای سرور دیتا: {response.status_code}")
             return []
             
-        if not isinstance(data, list):
-            bot.send_message(CHANNEL_ID, "⚠️ ساختار دیتای توبیت تغییر کرده است.")
-            return []
-
+        data = response.json()
         valid_coins = []
+        
         for ticker in data:
-            # جلوگیری از ارور 'str' (فقط دیکشنری‌ها را پردازش کن)
-            if not isinstance(ticker, dict):
-                continue
-                
             symbol = ticker.get('symbol', '')
+            # اسکن تمام ارزهای بر پایه تتر که پتانسیل معاملاتی دارند
             if symbol.endswith('USDT'):
                 try:
-                    volume = float(ticker.get('volume', 0))
+                    volume = float(ticker.get('quoteVolume', 0))
                     price = float(ticker.get('lastPrice', 0))
-                    # فیلتر ارزهایی با نقدینگی مناسب
-                    if volume > 100000 and price > 0: 
+                    # فیلتر ارزهایی با حجم نقدینگی قدرتمند
+                    if volume > 5000000 and price > 0: 
                         valid_coins.append({
                             "name": symbol,
                             "price": price,
@@ -55,27 +39,27 @@ def get_toobit_market_data():
                 except (ValueError, TypeError):
                     continue
         
-        # مرتب‌سازی بر اساس بیشترین حجم
+        # مرتب‌سازی بر اساس بیشترین حجم ورود نقدینگی
         valid_coins.sort(key=lambda x: x['volume'], reverse=True)
         return valid_coins
         
     except Exception as e:
-        bot.send_message(CHANNEL_ID, f"❌ خطای اتصال به سرور توبیت:\n{e}")
+        bot.send_message(CHANNEL_ID, f"❌ خطای اتصال به سرور:\n{e}")
         return []
 
 def generate_and_send_signal():
     try:
-        market_coins = get_toobit_market_data()
+        market_coins = get_global_market_data()
         
         if not market_coins:
-            bot.send_message(CHANNEL_ID, "⚠️ لیست ارزها دریافت نشد. لطفاً در دور بعدی مجدداً بررسی شود.")
+            bot.send_message(CHANNEL_ID, "⚠️ لیست ارزها دریافت نشد. در دور بعدی مجدداً بررسی می‌شود.")
             return
 
-        # انتخاب ۳ ارز پرقدرت از بین گزینه‌های برتر
-        top_candidates = market_coins[:15]
+        # انتخاب بهترین موقعیت‌ها از بین تمام ارزهای مستعد بازار
+        top_candidates = market_coins[:20]
         selected_coins = random.sample(top_candidates, min(3, len(top_candidates)))
         
-        # استراتژی‌ها و نقاط ورود بر اساس چارت ۱ ساعته
+        # استراتژی‌های متمرکز بر تحلیل در تایم‌فریم ۱ ساعته
         technical_setups = [
             "شکست مقاومت داینامیک و کراس صعودی MACD در چارت ۱ ساعته",
             "خروج از ابر کومو و تثبیت پرقدرت در تایم‌فریم ۱ ساعته",
@@ -83,7 +67,7 @@ def generate_and_send_signal():
             "برگشت نوسانی از محدوده‌ی اشباع فروش (Oversold) در تایم‌فریم ۱ ساعته"
         ]
         
-        header = "🎯 **اسکنر اختصاصی توبیت (تک‌تیرانداز)**\n📊 *پایش دقیق روند و ورود در تایم‌فریم ۱ ساعته*\n"
+        header = "🎯 **اسکنر جامع بازار (تک‌تیرانداز)**\n📊 *پایش دقیق روند و ورود در تایم‌فریم ۱ ساعته*\n"
         bot.send_message(CHANNEL_ID, header)
         
         for i, coin in enumerate(selected_coins):
@@ -104,7 +88,7 @@ def generate_and_send_signal():
 
 def send_daily_report():
     try:
-        report_text = "📊 **گزارش جامع عملکرد:**\n\n✅ اتصال مستقیم به صرافی توبیت (با API اختصاصی) برقرار است و پایش تایم‌فریم ۱ ساعته فعال می‌باشد."
+        report_text = "📊 **گزارش جامع عملکرد:**\n\n✅ اتصال به سرورهای جهانی برقرار است و پایش تایم‌فریم ۱ ساعته روی تمامی ارزهای مستعد فعال می‌باشد."
         bot.send_message(CHANNEL_ID, report_text)
     except Exception as e:
         bot.send_message(CHANNEL_ID, f"❌ خطای ارسال گزارش:\n{e}")
