@@ -1,6 +1,5 @@
 import telebot
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 import sys
 
 TELEGRAM_TOKEN = '8831119193:AAFlwHtGnNv_IvLsKuIeF_dAf579Ur5SXNE'
@@ -8,7 +7,7 @@ GEMINI_API_KEY = 'AQ.Ab8RN6L9DxAqamlxMgFGmw0c2RGw51QhVqMCNhMdJbDKjTP3NA'
 CHANNEL_ID = '@Omid_Sniper_Signals'
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-client = genai.Client(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
 
 def generate_and_send_signal():
     market_data_summary = """
@@ -17,10 +16,8 @@ def generate_and_send_signal():
     لطفاً یک سیگنال دقیق شامل نقطه ورود، حد ضرر و دو هدف قیمتی برای کانال تلگرام بنویس.
     """
     try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=market_data_summary,
-        )
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(market_data_summary)
         bot.send_message(CHANNEL_ID, f"🎯 **سیگنال جدید تک‌تیرانداز**\n\n{response.text}")
     except Exception as e:
         bot.send_message(CHANNEL_ID, f"❌ خطا در تولید سیگنال:\n{e}")
