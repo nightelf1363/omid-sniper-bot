@@ -3,9 +3,7 @@ name: Sniper Signals
 on:
   workflow_dispatch:
   schedule:
-    # ارسال گزارش روزانه در ساعت 4:00 UTC
     - cron: '0 4 * * *'
-    # پایش بازار و ارسال سیگنال هر دو ساعت یک‌بار
     - cron: '30 4,6,8,10,12,14,16,18,20 * * *'
 
 jobs:
@@ -22,7 +20,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyTelegramBotAPI requests
+        pip install pyTelegramBotAPI tradingview-ta
         
     - name: Execute Task
       run: |
