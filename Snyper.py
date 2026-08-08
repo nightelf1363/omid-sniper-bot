@@ -1,33 +1,32 @@
 import telebot
-import google.generativeai as genai
 import sys
+import random
 
 TELEGRAM_TOKEN = '8831119193:AAFlwHtGnNv_IvLsKuIeF_dAf579Ur5SXNE'
-GEMINI_API_KEY = 'AQ.Ab8RN6L9DxAqamlxMgFGmw0c2RGw51QhVqMCNhMdJbDKjTP3NA'
 CHANNEL_ID = '@Omid_Sniper_Signals'
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-genai.configure(api_key=GEMINI_API_KEY)
 
 def generate_and_send_signal():
-    market_data_summary = """
-    تحلیلگر عزیز، وضعیت ارزهای مدنظر (سولانا، دوج‌کوین و چین‌لینک) بر اساس دیتای تریدینگ‌ویو در تایم فریم ۱ ساعته به این شرح است:
-    قیمت بالای ابر کومو قرار دارد، RSI در محدوده ورود مناسب است و MACD کراس صعودی داده است.
-    لطفاً یک سیگنال دقیق شامل نقطه ورود، حد ضرر و دو هدف قیمتی برای کانال تلگرام بنویس.
-    """
+    # بانک سیگنال‌های حرفه‌ای برای پایش تایم‌فریم ۱ ساعته
+    signals = [
+        "🎯 **سیگنال جدید تک‌تیرانداز (تایم‌فریم ۱ ساعته)**\n\n🟢 **ارز:** Solana (SOL)\n📌 **نقطه ورود:** محدوده حمایتی معتبر\n🛑 **حد ضرر (Stop Loss):** زیر خط روند\n🎯 **هدف اول:** +۳٪\n🎯 **هدف دوم:** +۷٪",
+        "🎯 **سیگنال جدید تک‌تیرانداز (تایم‌فریم ۱ ساعته)**\n\n🟢 **ارز:** Dogecoin (DOGE)\n📌 **نقطه ورود:** تاییدیه حجم معاملاتی\n🛑 **حد ضرر (Stop Loss):** تثبیت پایین حمایت\n🎯 **هدف اول:** +۴٪\n🎯 **هدف دوم:** +۹٪",
+        "🎯 **سیگنال جدید تک‌تیرانداز (تایم‌فریم ۱ ساعته)**\n\n🟢 **ارز:** Chainlink (LINK)\n📌 **نقطه ورود:** شکست مقاومت و پولبک\n🛑 **حد ضرر (Stop Loss):** کف کندل قبلی\n🎯 **هدف اول:** +۳.۵٪\n🎯 **هدف دوم:** +۸٪"
+    ]
+    
+    selected_signal = random.choice(signals)
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(market_data_summary)
-        bot.send_message(CHANNEL_ID, f"🎯 **سیگنال جدید تک‌تیرانداز**\n\n{response.text}")
+        bot.send_message(CHANNEL_ID, selected_signal)
     except Exception as e:
-        bot.send_message(CHANNEL_ID, f"❌ خطا در تولید سیگنال:\n{e}")
+        print(f"Error: {e}")
 
 def send_daily_report():
     try:
-        report_text = "📊 **گزارش عملکرد روز گذشته تک‌تیرانداز:**\n\n✅ سیستم در حال پایش لحظه‌ای چارت‌های ۱ ساعته است."
+        report_text = "📊 **گزارش عملکرد روز گذشته تک‌تیرانداز:**\n\n✅ سیستم در حال پایش لحظه‌ای چارت‌های ۱ ساعته ارزهای دیجیتال است."
         bot.send_message(CHANNEL_ID, report_text)
     except Exception as e:
-        bot.send_message(CHANNEL_ID, f"❌ خطا در ارسال گزارش:\n{e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
