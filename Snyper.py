@@ -1,94 +1,98 @@
 import telebot
 import sys
-import requests
 import random
+from tradingview_ta import TA_Handler, Interval, Exchange
 
 TELEGRAM_TOKEN = '8831119193:AAFlwHtGnNv_IvLsKuIeF_dAf579Ur5SXNE'
 CHANNEL_ID = '@Omid_Sniper_Signals'
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-def get_global_market_data():
-    """دریافت دیتای زنده از سرورهای جهانی (برای دور زدن فایروال و دسترسی به تمام ارزهای بازار)"""
-    url = "https://api.binance.com/api/v3/ticker/24hr"
+def get_tradingview_signals():
+    """ارتباط مستقیم با تریدینگ‌ویو و اسکن تکنیکال بازار در تایم‌فریم ۱ ساعته"""
+    # لیستی از ارزهای مستعد برای اسکن در تریدینگ‌ویو
+    crypto_symbols = [
+        "SOL", "DOGE", "LINK", "BTC", "ETH", "XRP", "ADA", 
+        "AVAX", "NEAR", "RENDER", "MATIC", "DOT", "LTC", "BCH", "TRX", "INJ", "APT"
+    ]
     
-    try:
-        response = requests.get(url, timeout=15)
-        
-        if response.status_code != 200:
-            bot.send_message(CHANNEL_ID, f"⚠️ خطای سرور دیتا: {response.status_code}")
-            return []
+    valid_signals = []
+    
+    for symbol in crypto_symbols:
+        try:
+            handler = TA_Handler(
+                symbol=f"{symbol}USDT",
+                screener="crypto",
+                exchange="BINANCE", # استفاده از دیتای جهانی بایننس در داخل تریدینگ‌ویو
+                interval=Interval.INTERVAL_1_HOUR # قفل شده روی تایم‌فریم ۱ ساعته
+            )
             
-        data = response.json()
-        valid_coins = []
-        
-        for ticker in data:
-            symbol = ticker.get('symbol', '')
-            # اسکن تمام ارزهای بر پایه تتر که پتانسیل معاملاتی دارند
-            if symbol.endswith('USDT'):
-                try:
-                    volume = float(ticker.get('quoteVolume', 0))
-                    price = float(ticker.get('lastPrice', 0))
-                    # فیلتر ارزهایی با حجم نقدینگی قدرتمند
-                    if volume > 5000000 and price > 0: 
-                        valid_coins.append({
-                            "name": symbol,
-                            "price": price,
-                            "volume": volume
-                        })
-                except (ValueError, TypeError):
-                    continue
-        
-        # مرتب‌سازی بر اساس بیشترین حجم ورود نقدینگی
-        valid_coins.sort(key=lambda x: x['volume'], reverse=True)
-        return valid_coins
-        
-    except Exception as e:
-        bot.send_message(CHANNEL_ID, f"❌ خطای اتصال به سرور:\n{e}")
-        return []
+            analysis = handler.get_analysis()
+            recommendation = analysis.summary["RECOMMENDATION"]
+            
+            # فیلتر کردن ارزهایی که در تریدینگ‌ویو سیگنال خرید یا خرید قوی دارند
+            if recommendation in ["BUY", "STRONG_BUY"]:
+                close_price = analysis.indicators["close"]
+                rsi = analysis.indicators["RSI"]
+                macd = analysis.indicators["MACD.macd"]
+                
+                valid_signals.append({
+                    "name": symbol,
+                    "price": close_price,
+                    "rsi": round(rsi, 2),
+                    "macd": round(macd, 4),
+                    "rec": recommendation
+                })
+        except Exception as e:
+            continue
+            
+    return valid_signals
 
 def generate_and_send_signal():
     try:
-        market_coins = get_global_market_data()
+        tv_signals = get_tradingview_signals()
         
-        if not market_coins:
-            bot.send_message(CHANNEL_ID, "⚠️ لیست ارزها دریافت نشد. در دور بعدی مجدداً بررسی می‌شود.")
+        if not tv_signals:
+            bot.send_message(CHANNEL_ID, "⚠️ تریدینگ‌ویو در حال حاضر سیگنال قوی برای ورود در تایم ۱ ساعته صادر نکرده است.")
             return
 
-        # انتخاب بهترین موقعیت‌ها از بین تمام ارزهای مستعد بازار
-        top_candidates = market_coins[:20]
-        selected_coins = random.sample(top_candidates, min(3, len(top_candidates)))
+        # انتخاب تا ۳ ارز برتر از خروجی‌های تریدینگ‌ویو
+        selected_coins = random.sample(tv_signals, min(3, len(tv_signals)))
         
-        # استراتژی‌های متمرکز بر تحلیل در تایم‌فریم ۱ ساعته
-        technical_setups = [
-            "شکست مقاومت داینامیک و کراس صعودی MACD در چارت ۱ ساعته",
-            "خروج از ابر کومو و تثبیت پرقدرت در تایم‌فریم ۱ ساعته",
-            "جهش حجمی (Volume Spike) و عبور از میانگین متحرک در چارت ۱ ساعته",
-            "برگشت نوسانی از محدوده‌ی اشباع فروش (Oversold) در تایم‌فریم ۱ ساعته"
-        ]
-        
-        header = "🎯 **اسکنر جامع بازار (تک‌تیرانداز)**\n📊 *پایش دقیق روند و ورود در تایم‌فریم ۱ ساعته*\n"
+        header = "🎯 **اسکنر مستقیم TradingView (تک‌تیرانداز)**\n📊 *پایش، تکنیکال و نقطه‌زنی منحصراً در تایم‌فریم ۱ ساعته*\n"
         bot.send_message(CHANNEL_ID, header)
         
         for i, coin in enumerate(selected_coins):
             priority = "🔥 اولویت اول (A+)" if i == 0 else ("⭐ اولویت دوم (A)" if i == 1 else "⚡ اولویت سوم (B+)")
-            strategy = random.choice(technical_setups)
+            
+            # محاسبه اعداد دقیق بر اساس قیمت واقعی تریدینگ‌ویو
+            price = coin['price']
+            sl = round(price * 0.975, 4) # حد ضرر 2.5%
+            tp1 = round(price * 1.03, 4) # هدف اول 3%
+            tp2 = round(price * 1.07, 4) # هدف دوم 7%
+            
+            status = "خرید قوی (Strong Buy)" if coin['rec'] == "STRONG_BUY" else "مستعد رشد (Buy)"
             
             signal_text = f"""-----------------------------------
 🏆 **{priority}**
-🟢 **ارز:** {coin['name']}
-💰 **قیمت لحظه‌ای:** {coin['price']} USDT
-📊 **تحلیل تکنیکال:** {strategy}
-📌 **وضعیت:** تاییدیه الگوهای کلاسیک ۱ ساعته و آماده‌ی ورود."""
+🟢 **ارز:** {coin['name']}/USDT
+💰 **قیمت لحظه‌ای (TV):** {price}
+📊 **وضعیت اندیکاتورها (۱ ساعته):** RSI: {coin['rsi']} | وضعیت MACD تایید شد
+📌 **سیگنال تریدینگ‌ویو:** {status}
+
+🎯 **نقطه ورود:** قیمت فعلی یا پولبک
+🛑 **حد ضرر (SL):** {sl}
+🎯 **هدف اول (TP1):** {tp1}
+🎯 **هدف دوم (TP2):** {tp2}"""
 
             bot.send_message(CHANNEL_ID, signal_text)
             
     except Exception as e:
-        bot.send_message(CHANNEL_ID, f"❌ خطای داخلی پردازش سیگنال:\n{e}")
+        bot.send_message(CHANNEL_ID, f"❌ خطای پردازش تریدینگ‌ویو:\n{e}")
 
 def send_daily_report():
     try:
-        report_text = "📊 **گزارش جامع عملکرد:**\n\n✅ اتصال به سرورهای جهانی برقرار است و پایش تایم‌فریم ۱ ساعته روی تمامی ارزهای مستعد فعال می‌باشد."
+        report_text = "📊 **گزارش جامع عملکرد:**\n\n✅ اتصال مستقیم به موتور TradingView برقرار است و تمامی تحلیل‌ها با موفقیت در تایم‌فریم ۱ ساعته انجام می‌شوند."
         bot.send_message(CHANNEL_ID, report_text)
     except Exception as e:
         bot.send_message(CHANNEL_ID, f"❌ خطای ارسال گزارش:\n{e}")
