@@ -1,13 +1,13 @@
 import telebot
-from google import genai
+import requests
+import json
 import sys
 
 TELEGRAM_TOKEN = '8831119193:AAFlwHtGnNv_IvLsKuIeF_dAf579Ur5SXNE'
-GEMINI_API_KEY = 'AQ.Ab8RN6I0oCC73QV40vbbejz42zWpg4ti1MCcGqY4gyIB5xKBCA'
+GEMINI_API_KEY = 'AQ.Ab8RN6I9_dDQq_59Rt1RyTDZt8xEfNl4pogbczAVkfXS1Xbd5A'
 CHANNEL_ID = '@Omid_Sniper_Signals'
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-client = genai.Client(api_key=GEMINI_API_KEY)
 
 def generate_and_send_signal():
     market_data_summary = """
@@ -15,14 +15,30 @@ def generate_and_send_signal():
     قیمت بالای ابر کومو قرار دارد، RSI در محدوده ورود مناسب است و MACD کراس صعودی داده است.
     لطفاً یک سیگنال دقیق شامل نقطه ورود، حد ضرر و دو هدف قیمتی برای کانال تلگرام بنویس.
     """
+    
+    # استفاده از ارتباط مستقیم HTTP که هیچ‌گونه وابستگی به کتابخانه‌های سخت‌گیرانه ندارد
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    headers = {'Content-Type': 'application/json'}
+    data = {
+        "contents": [{
+            "parts": [{"text": market_data_summary}]
+        }]
+    }
+    
     try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=market_data_summary
-        )
-        bot.send_message(CHANNEL_ID, f"🎯 **سیگنال جدید تک‌تیرانداز**\n\n{response.text}")
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+        result = response.json()
+        
+        if response.status_code == 200:
+            # استخراج متن پاسخ از ساختار JSON گوگل
+            signal_text = result['candidates'][0]['content']['parts'][0]['text']
+            bot.send_message(CHANNEL_ID, f"🎯 **سیگنال جدید تک‌تیرانداز**\n\n{signal_text}")
+        else:
+            error_msg = result.get('error', {}).get('message', 'خطای ناشناخته')
+            bot.send_message(CHANNEL_ID, f"❌ خطا در پاسخ گوگل:\n{error_msg}")
+            
     except Exception as e:
-        bot.send_message(CHANNEL_ID, f"❌ خطا در تولید سیگنال:\n{e}")
+        bot.send_message(CHANNEL_ID, f"❌ خطای سیستمی:\n{e}")
 
 def send_daily_report():
     try:
